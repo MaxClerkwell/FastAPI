@@ -1,0 +1,28 @@
+@startuml
+actor Client
+participant Uvicorn
+participant Starlette
+participant FastAPIApp as "FastAPI app"
+participant "TicketService" as Service
+participant "Database" as DB
+
+Client -> Uvicorn: HTTP POST /create_ticket + JSON Body
+activate Uvicorn
+Uvicorn -> Starlette: ASGI receive scope
+activate Starlette
+Starlette -> FastAPIApp: route /create_ticket
+activate FastAPIApp
+FastAPIApp -> Service: create_ticket(data)
+activate Service
+Service -> DB: INSERT INTO tickets (...) 
+activate DB
+DB --> Service: Ticket(id=987)
+deactivate DB
+Service --> FastAPIApp: Ticket(data)
+deactivate Service
+FastAPIApp -> Uvicorn: HTTP 201 {ticket JSON}
+deactivate FastAPIApp
+deactivate Starlette
+Uvicorn --> Client: ASGI send response
+deactivate Uvicorn
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+actor Client
+participant Uvicorn
+participant Starlette
+participant FastAPIApp as "FastAPI app"
+participant "SendTemp Thread" as SendThread
+participant Buffer
+participant "PeriodicMeasure Thread" as PeriodicThread
+
+== Hintergrundprozesse ==
+activate PeriodicThread
+activate Buffer
+note right of PeriodicThread
+  läuft endlos,
+  liest I2C-Temperatursensor
+  und überschreibt Buffer
+end note
+loop forever
+    PeriodicThread -> Buffer: update(timestamp, temperature)
+end
+
+== WebSocket-Verbindung ==
+Client -> Uvicorn: WS CONNECT /ws/temperature
+activate Uvicorn
+Uvicorn -> Starlette: ASGI receive scope
+activate Starlette
+Starlette -> FastAPIApp: websocket_route /ws/temperature
+activate FastAPIApp
+note right of FastAPIApp
+  bei connect: starte SendTemp Thread
+end note
+FastAPIApp -> SendThread: start(temp_measure)
+activate SendThread
+
+loop every 30 seconds
+    SendThread -> Buffer: read latest(timestamp, temperature)
+    SendThread -> FastAPIApp: temp_measure(data)
+    FastAPIApp -> Uvicorn: ASGI send websocket message
+    Uvicorn --> Client: WebSocket MESSAGE
+end
+
+== Verbindungsende ==
+Client --> Uvicorn: WS CLOSE
+Uvicorn -> Starlette: ASGI receive disconnect
+Starlette -> FastAPIApp: websocket_disconnect
+FastAPIApp -> SendThread: stop()
+deactivate SendThread
+deactivate FastAPIApp
+deactivate Starlette
+Uvicorn --> Client: WS CLOSE
+deactivate Uvicorn
+@enduml

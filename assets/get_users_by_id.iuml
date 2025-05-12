@@ -1,0 +1,28 @@
+@startuml
+actor Client
+participant Uvicorn
+participant Starlette
+participant FastAPIApp as "FastAPI app"
+participant "UserService" as Service
+participant "Database" as DB
+
+Client -> Uvicorn: HTTP GET /get_user_by_id/123
+activate Uvicorn
+Uvicorn -> Starlette: ASGI receive scope
+activate Starlette
+Starlette -> FastAPIApp: route /get_user_by_id/{user_id}
+activate FastAPIApp
+FastAPIApp -> Service: get_user_by_id(user_id=123)
+activate Service
+Service -> DB: query SELECT * FROM users WHERE id=123
+activate DB
+DB --> Service: user record
+deactivate DB
+Service --> FastAPIApp: User(data)
+deactivate Service
+FastAPIApp -> Uvicorn: HTTP 200 {user JSON}
+deactivate FastAPIApp
+deactivate Starlette
+Uvicorn --> Client: ASGI send response
+deactivate Uvicorn
+@enduml
