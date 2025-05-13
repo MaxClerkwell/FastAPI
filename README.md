@@ -33,8 +33,8 @@ Ein **Endpoint** in Anwendungen die auf RESTful APIs setzen, bezeichnet eine kla
 
 ### Gehört ein WebSocket dazu?  
 **WebSocket** ist ein eigenständiges, **persistentes** und **bidirektionales** Kommunikationsprotokoll, das nicht dem zustandslosen Request-/Response-Modell von REST folgt.  
-- WebSocket-Verbindungen werden nach einem Handshake offen gehalten und ermöglichen Echtzeit-Streaming.  
-- Da REST auf kurzlebigen, zustandslosen HTTP-Requests basiert, zählen WebSockets **nicht** zu den RESTful APIs, werden aber häufig **ergänzend** eingesetzt, um Echtzeit-Use-Cases (z. B. Chat, Telemetrie) zu unterstützen.
+- WebSocket-Verbindungen werden nach einem Handshake offen gehalten und ermöglichen Streaming.  
+- Da REST auf kurzlebigen, zustandslosen HTTP-Requests basiert, zählen WebSockets **nicht** zu den RESTful APIs, werden aber häufig **ergänzend** eingesetzt, um Use-Cases (z. B. Chat, Telemetrie) zu unterstützen.
 
 ## Planen von Endpoints
 Wir beginnen damit unsere Dateninteraktionen aus den Use-Cases in Sequence-Diagramme zu übersetzen. Zur Dokumentation und Visualisierung eignet sich hier das Tool PlantUML, welches eine Klasse für Sequence-Diagramme mitliefert. Rendern lassen können wir dieses etwa mit dem `kroki.io` Webservice. 
