@@ -329,20 +329,31 @@ class TemperatureSample(BaseModel):
 
 ```python
 # app/main.py
-from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 import uvicorn
 from datetime import datetime
-import threading, time
+import threading, time, math
+import asyncio
 from app.models import User, TicketCreate, Ticket, TemperatureSample
 
 app = FastAPI()
 
 # In-Memory Mock-Daten
-mock_users = {123: User(id=123, username="jdoe", first_name="John", last_name="Doe", email="jdoe@example.com", created_at=datetime.utcnow(), roles=["user","admin"]) }
-mock_tickets = []
+mock_users = {
+    123: User(
+        id=123,
+        username="jdoe",
+        first_name="John",
+        last_name="Doe",
+        email="jdoe@example.com",
+        created_at=datetime.utcnow(),
+        roles=["user", "admin"]
+    )
+}
+mock_tickets: list[Ticket] = []
 
-def get_ticket_id():
+def get_ticket_id() -> int:
     return len(mock_tickets) + 1
 
 # Use Case 1: GET Benutzerprofil
@@ -357,31 +368,39 @@ def get_user(user_id: int):
 @app.post("/create_ticket", response_model=Ticket, status_code=201)
 def create_ticket(ticket: TicketCreate):
     new_id = get_ticket_id()
-    new_ticket = Ticket(id=new_id, status="open", created_at=datetime.utcnow(), **ticket.dict())
+    new_ticket = Ticket(
+        id=new_id,
+        status="open",
+        created_at=datetime.utcnow(),
+        **ticket.dict()
+    )
     mock_tickets.append(new_ticket)
     return new_ticket
 
 # Use Case 3: WebSocket Temperatur-Stream
-buffer = {'timestamp': datetime.utcnow(), 'value': 0.0}
+buffer: dict = {'timestamp': datetime.utcnow(), 'value': 0.0}
 
 def periodic_measure():
     while True:
-        # Simuliere I2C-Sensor-Lesen
         buffer['timestamp'] = datetime.utcnow()
-        buffer['value'] = 20.0 + 5.0 * time.sin(time.time() / 30)
+        buffer['value'] = 20.0 + 5.0 * math.sin(time.time() / 30)
         time.sleep(1)
 
 threading.Thread(target=periodic_measure, daemon=True).start()
 
 @app.websocket("/ws/temperature")
-def temp_stream(ws: WebSocket):
+async def temp_stream(ws: WebSocket):
     await ws.accept()
     try:
         while True:
-            sample = TemperatureSample(timestamp=buffer['timestamp'], value=buffer['value'])
-            await ws.send_json(sample.dict())
-            time.sleep(30)
-    except Exception:
+            sample = TemperatureSample(
+                timestamp=buffer['timestamp'],
+                value=buffer['value']
+            )
+            # JSON serialisiert datetime korrekt
+            await ws.send_text(sample.json())
+            await asyncio.sleep(30)
+    except WebSocketDisconnect:
         await ws.close()
 
 # Starte Uvicorn, wenn direkt ausgeführt
