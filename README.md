@@ -133,7 +133,7 @@ deactivate Uvicorn
 
 ![Sequence-create_ticket](assets/create_ticket.svg)
 
-#### Use-Case 4: WebSocket - Temerpatur-Messung
+#### Use-Case 3: WebSocket - Temerpatur-Messung
 
 ```puml
 @startuml
