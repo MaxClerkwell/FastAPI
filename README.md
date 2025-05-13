@@ -574,8 +574,9 @@ import threading
 from websockets import connect
 
 @pytest.mark.asyncio
-def test_ws_temperature():
+async def test_ws_temperature():
     uri = "ws://localhost:80/ws/temperature"
+    # WebSocket-Handschlag mit async with
     async with connect(uri) as websocket:
         msg = await websocket.recv()
         data = json.loads(msg)
