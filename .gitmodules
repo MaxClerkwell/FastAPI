@@ -1,0 +1,3 @@
+[submodule "FastAPI_lecture_example"]
+	path = FastAPI_lecture_example
+	url = https://github.com/MaxClerkwell/FastAPI_lecture_example
